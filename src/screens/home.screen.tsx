@@ -1,11 +1,8 @@
-import {FlatList, StyleSheet, Text} from 'react-native';
+import {FlatList, StyleSheet} from 'react-native';
 import React, {useContext, useState} from 'react';
 import {View} from '../components/view/View.component';
-import CardProduct from '../components/cardProduct/product.component';
 import {PropsStack} from '../routes/stack.routes';
 import {TextInput} from '../components/TextInput/TextInput';
-import {Button} from '../components/Button/button';
-
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {ColorsContex} from '../context/colors.context';
 import {useStoreUser} from '../context/user.zustand.context';
@@ -33,8 +30,6 @@ export default function Home(props: PropsStack<'Home'>) {
       ],
     },
   ];
-  console.log(state);
-  
   return (
     <View
       style={{
@@ -50,6 +45,7 @@ export default function Home(props: PropsStack<'Home'>) {
         icon={
           <AntDesign
             name="search1"
+            size={18}
             color={secondary}
             onPress={() => console.log('press')}
           />
@@ -62,11 +58,11 @@ export default function Home(props: PropsStack<'Home'>) {
             <CardUser
               item={{header: item.email, description: 'Conected'}}
               horizontal
-              onPress={()=>props.navigation.navigate('Message',{user:item})}
+              onPress={() => props.navigation.navigate('Message', {user: item})}
             />
           );
         }}
-        style={{width:'90%'}}
+        style={{width: '90%'}}
       />
     </View>
   );

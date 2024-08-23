@@ -17,6 +17,7 @@ interface props extends TextInputProps {
   isPaswword?: boolean;
   error?: {[key: string]: string};
   icon?: React.ReactElement;
+  leftIcon?: React.ReactElement;
 }
 
 export const TextInput: FC<props> = (props): React.ReactElement => {
@@ -28,6 +29,7 @@ export const TextInput: FC<props> = (props): React.ReactElement => {
       borderRadius: 10,
       borderWidth: 1,
       paddingHorizontal: 13,
+      paddingLeft:props.leftIcon?40:13,
       paddingVertical: 9,
       minWidth: 120,
       borderColor: props.error && props.error[name] ? 'red' : secondary,
@@ -50,7 +52,15 @@ export const TextInput: FC<props> = (props): React.ReactElement => {
       justifyContent: 'center',
       alignSelf: 'flex-end',
       right: 10,
-      bottom:3,
+      bottom:2,
+    },
+    leftIcon: {
+      position: 'absolute',
+      height: '100%',
+      justifyContent: 'center',
+      alignSelf: 'flex-start',
+      left: 10,
+      zIndex:10,
     },
     error: {
       alignSelf: 'flex-start',
@@ -65,6 +75,11 @@ export const TextInput: FC<props> = (props): React.ReactElement => {
       style={[styles.container, props.containerProps?.style]}>
       <View>
         <Text style={styles.label}>{props.label}</Text>
+        {(props.leftIcon) && (
+          <View style={styles.leftIcon}>
+            {props.leftIcon}
+          </View>
+        )}
         <Input
           style={[styles.Input, props.style]}
           secureTextEntry={props.isPaswword}

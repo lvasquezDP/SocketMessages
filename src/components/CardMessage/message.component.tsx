@@ -8,7 +8,8 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 export interface MessageInterface {
   emisor: string;
   receptor: string;
-  message: string;
+  message?: string;
+  img?: string;
   entregado: string;
   visto: string;
 }
@@ -28,7 +29,12 @@ export default function CardMessage({
   return (
     <View style={styles.row}>
       <View style={styles.card}>
-        <Text style={styles.textHeader}>{item.message}</Text>
+        {item.img && (
+          <View style={styles.image}>
+            <Image style={{width: 150, height: 150}} source={{uri: item.img}} />
+          </View>
+        )}
+        {item.message && <Text style={styles.textHeader}>{item.message}</Text>}
         {owner && (
           <View style={styles.status}>
             <AntDesign
@@ -68,9 +74,10 @@ export const Styles = (owner: boolean) => {
     row: {
       width: '100%',
       alignItems: owner ? 'flex-end' : 'flex-start',
-      padding:2,
+      padding: 2,
     },
     textHeader: {
+      alignSelf: owner ? 'flex-end' : 'flex-start',
       flexWrap: 'wrap',
       fontWeight: '300',
       color: secondary,
@@ -80,6 +87,10 @@ export const Styles = (owner: boolean) => {
     },
     status: {
       flexDirection: 'row',
+    },
+    image: {
+      overflow: 'hidden',
+      borderRadius: 10,
     },
   });
 };

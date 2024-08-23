@@ -1,9 +1,8 @@
-import {createStackNavigator} from '@react-navigation/stack';
+import {createStackNavigator, StackScreenProps} from '@react-navigation/stack';
 import Home from '../screens/home.screen';
 import {useContext} from 'react';
 import {ColorsContex} from '../context/colors.context';
 import Start from '../screens/start';
-import {NativeStackScreenProps} from 'react-native-screens/lib/typescript/native-stack/types';
 import Message from '../screens/message.screen';
 
 type RootStackParamList = {
@@ -13,7 +12,7 @@ type RootStackParamList = {
 };
 
 export type PropsStack<T extends keyof RootStackParamList> =
-NativeStackScreenProps<RootStackParamList, T>;
+StackScreenProps<RootStackParamList, T>;
 
 const Stack = createStackNavigator<RootStackParamList>();
 

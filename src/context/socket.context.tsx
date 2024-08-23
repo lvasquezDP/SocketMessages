@@ -7,15 +7,18 @@ import React, {
   useRef,
 } from 'react';
 import {host} from '../utils/api/api';
+import PushNotificationConfig from '../utils/alerts/PushNotificationConfig';
+
+type callback = (obj: {[key: string]: any}) => boolean;
 
 const InitContex: Contex = {
-  connectToWebSockets: (id: string) => {},
-  subscribe: (type: string, callback: Function) => () => {},
+  connectToWebSockets: id => {},
+  subscribe: (type, callback) => () => {},
   state: {users: []},
-}
+};
 interface Contex {
   connectToWebSockets: (id: string) => void;
-  subscribe: (type: string, callback: Function) => Function;
+  subscribe: (type: string, callback: callback) => Function;
   state: state;
 }
 interface sw {
@@ -32,6 +35,12 @@ function reducer(state: state, action: sw) {
     case 'users-conected':
       return {...state, users: action.payload.users};
     case 'message-user':
+      PushNotificationConfig.showNotification({
+        channelId: 'default-channel-id',
+        message: action.payload.message.message,
+        title: action.payload.user.email,
+        picture:action.payload.message.img,
+      });
       return {
         ...state,
         action: {id: action.payload.message.emisor, type: action.type},
@@ -45,18 +54,21 @@ export const SocketContex = createContext(InitContex);
 
 export const SocketContext: FC<{children: React.ReactNode}> = ({children}) => {
   const [state, dispatch] = useReducer(reducer, {users: []});
-  const subscriptions = useRef<{[key: string]: Function[]}>({}).current;
+  const subscriptions = useRef<{[key: string]: callback[]}>({}).current;
 
   const connectToWebSockets = (id: string) => {
     const socket = new WebSocket(`ws://${host}/ws?id=${id}`);
 
     socket.onmessage = event => {
-      const {type, payload} = JSON.parse(event.data);
+      const {type, payload}: sw = JSON.parse(event.data);
+      let res = true;
       if (subscriptions[type])
-        subscriptions[type].forEach(callback => callback(payload));
-      dispatch({type, payload});
-      console.log({type, payload});
-      
+        res = subscriptions[type]
+          .map(callback => callback(payload))
+          .some(x => x == false);
+
+      if (res) dispatch({type, payload});
+      // console.log({type, payload});
     };
 
     socket.onclose = event => {
@@ -71,7 +83,7 @@ export const SocketContext: FC<{children: React.ReactNode}> = ({children}) => {
     };
   };
 
-  const subscribe = (type: string, callback: Function) => {
+  const subscribe = (type: string, callback: callback) => {
     if (!subscriptions[type]) subscriptions[type] = [];
 
     subscriptions[type].push(callback);
@@ -88,7 +100,7 @@ export const SocketContext: FC<{children: React.ReactNode}> = ({children}) => {
   );
 };
 
-export const useSocketMessage = (type: string, callback: Function) => {
+export const useSocketMessage = (type: string, callback: callback) => {
   const {subscribe} = useContext(SocketContex);
 
   useEffect(() => {
