@@ -35,11 +35,18 @@ function reducer(state: state, action: sw) {
     case 'users-conected':
       return {...state, users: action.payload.users};
     case 'message-user':
+      if(action.payload.message.img.length==1)
       PushNotificationConfig.showNotification({
         channelId: 'default-channel-id',
-        message: action.payload.message.message,
         title: action.payload.user.email,
-        picture:action.payload.message.img,
+        message: action.payload.message.message,
+        picture:action.payload.message.img[0].Media,
+      });
+      else
+      PushNotificationConfig.showNotification({
+        channelId: 'default-channel-id',
+        title: action.payload.user.email,
+        message: action.payload.message.message+'\n Con '+action.payload.message.img.length+' imagenes',
       });
       return {
         ...state,
@@ -85,9 +92,7 @@ export const SocketContext: FC<{children: React.ReactNode}> = ({children}) => {
 
   const subscribe = (type: string, callback: callback) => {
     if (!subscriptions[type]) subscriptions[type] = [];
-
     subscriptions[type].push(callback);
-
     return () => {
       subscriptions[type] = subscriptions[type].filter(cb => cb !== callback);
     };

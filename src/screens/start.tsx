@@ -15,7 +15,7 @@ import {TextInput} from '../components/TextInput/TextInput';
 import api from '../utils/api/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useStoreUser} from '../context/user.zustand.context';
-import { SocketContex } from '../context/socket.context';
+import {SocketContex} from '../context/socket.context';
 
 const {UIManager} = NativeModules;
 
@@ -113,11 +113,25 @@ const StartForm = (secondary: string, setForm: dispatch) => {
   );
 };
 const Login = ({props, setForm}: form) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  let [email, setEmail] = useState('');
+  let [password, setPassword] = useState('');
+  const [save, setSave] = useState(false);
   const [errors, setErrors] = useState({});
   const {connectToWebSockets} = useContext(SocketContex);
   const dispatch = useStoreUser(state => state.dispatch);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const user = await AsyncStorage.getItem('user');
+      if (user) {
+        const {email: userE, password: userP} = JSON.parse(user);
+        email = userE;
+        password = userP;
+        onSubmit();
+      }
+    };
+    getUser();
+  }, []);
 
   const onSubmit = () => {
     api
@@ -126,12 +140,14 @@ const Login = ({props, setForm}: form) => {
         const {data} = res;
         if (data.token) AsyncStorage.setItem('token', data.token);
         connectToWebSockets(data.user.id);
-        dispatch({name: data.user.name, email: data.user.email,id:data.user.id});
-        props.navigation.replace('Home');
+        dispatch(data.user);
+        if (save)
+          AsyncStorage.setItem('user', JSON.stringify({email, password}));
+        props.navigation.replace('Home',{user:data.user});
       })
       .catch(e => {
         console.log(e);
-        
+
         if (e.response.data.errors) setErrors(e.response.data.errors);
         else if (e.response.data.error)
           setErrors({email: e.response.data.error});
@@ -149,7 +165,7 @@ const Login = ({props, setForm}: form) => {
         error={errors}
         onChangeText={setEmail}
         autoCapitalize="none"
-        keyboardType='email-address'
+        keyboardType="email-address"
       />
       <TextInput
         containerProps={{style: styles.Input}}
@@ -161,12 +177,20 @@ const Login = ({props, setForm}: form) => {
         onChangeText={setPassword}
         autoCapitalize="none"
       />
+      <View
+        style={{
+          flexDirection: 'row',
+          width: '75%',
+          justifyContent: 'flex-end',
+        }}>
+        <Button
+          text={save ? 'not save' : 'save'}
+          style={{paddingVertical: 1, marginVertical: 1}}
+          onPress={() => setSave(!save)}
+        />
+      </View>
 
-      <Button
-        text="Log in"
-        style={{width: '60%', marginTop: 20}}
-        onPress={onSubmit}
-      />
+      <Button text="Log in" style={{width: '60%'}} onPress={onSubmit} />
       <Button
         secondary
         text="Back"
@@ -183,6 +207,7 @@ const Register = ({props, setForm}: form) => {
   const [cPassword, setCPassword] = useState('');
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const dispatch = useStoreUser(state => state.dispatch);
+  const {connectToWebSockets} = useContext(SocketContex);
 
   useEffect(() => {
     if (password !== cPassword)
@@ -198,8 +223,9 @@ const Register = ({props, setForm}: form) => {
       .then(res => {
         const {data} = res;
         if (data.token) AsyncStorage.setItem('token', data.token);
-        dispatch({name: data.user.name, email: data.user.email});
-        props.navigation.replace('Home');
+        connectToWebSockets(data.user.id);
+        dispatch(data.user);
+        props.navigation.replace('Home',{user:data.user});
       })
       .catch(e => setErrors(e.response.data.errors));
   };

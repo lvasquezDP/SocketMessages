@@ -2,6 +2,7 @@ import {PermissionsAndroid, Platform} from 'react-native';
 import {
   Callback,
   CameraOptions,
+  ImageLibraryOptions,
   launchCamera,
   launchImageLibrary,
 } from 'react-native-image-picker';
@@ -38,7 +39,7 @@ export default class ImagePicker {
     return launchCamera(options, callback);
   }
 
-  static launchImageLibrary(options: CameraOptions, callback?: Callback) {
+  static launchImageLibrary(options: ImageLibraryOptions, callback?: Callback) {
     return launchImageLibrary(options, callback);
   }
 }

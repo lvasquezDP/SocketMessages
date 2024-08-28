@@ -1,18 +1,15 @@
 import {create} from 'zustand';
-
-type State = {
-  email?: string;
-  name?: string;
-  id?: string;
-};
+import {IUser} from '../utils/interfaces/user';
 
 type Actions = {
-  dispatch: (qty: State) => void;
+  dispatch: (qty: IUser) => void;
 };
 
-export const useStoreUser = create<State & Actions>(set => ({
-  name: '',
+export const useStoreUser = create<IUser & Actions>(set => ({
   email: '',
+  emailValidated: false,
   id: '',
-  dispatch: (qty: State) => set(state => ({...state, ...qty})),
+  name: '',
+  role: [''],
+  dispatch: (qty: IUser) => set(state => ({...state, ...qty})),
 }));

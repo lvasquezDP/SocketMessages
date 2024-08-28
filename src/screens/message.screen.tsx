@@ -17,7 +17,7 @@ import {Asset} from 'react-native-image-picker';
 export default function Message(props: PropsStack<'Message'>) {
   const {secondary, primary} = useContext(ColorsContex);
   const [message, setMessage] = useState('');
-  const [img, setImg] = useState<Asset>();
+  const [img, setImg] = useState<Asset[]>([]);
   const [messages, setMessages] = useState<MessageInterface[]>([]);
   const id = useStoreUser(state => state.id);
   const flatListRef = useRef<FlatList>(null);
@@ -42,7 +42,6 @@ export default function Message(props: PropsStack<'Message'>) {
   useSocketMessage('message-user', getMessages);
 
   useEffect(() => {
-    props.navigation.setOptions({title: props.route.params.user.email});
     getMessages({});
   }, []);
 
@@ -51,37 +50,40 @@ export default function Message(props: PropsStack<'Message'>) {
     data.append('message', message);
     data.append('receptor', props.route.params.user.id);
     data.append('emisor', id);
-    console.log(img);
-    
-    data.append('file', {
-      name: img?.fileName,
-      uri: img?.uri,
-      type: img?.type,
+    img.forEach((img, i) => {
+      data.append(`files`, {
+        name: img.fileName,
+        uri: img.uri,
+        type: img.type,
+      });
     });
+
     api
-      .post('/user/', data, {
+      .post('/user/sendMessage', data, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       })
       .then(res => {
         const {data} = res;
-        setMessages([...messages, data]);
+        setMessages([data, ...messages]);
         setMessage('');
-        setImg({});
+        setImg([]);
       })
       .catch(e => {
-        console.log(e);
+        console.log(e.response.data);
       });
   };
 
   const selectImg = () =>
-    ImagePicker.launchImageLibrary({mediaType: 'photo'}, response => {
-      if (response.didCancel) console.log('cancel');
-      else if (response.errorMessage) console.log(response.errorMessage);
-      else if (response.assets && response.assets[0])
-        setImg(response.assets[0]);
-    });
+    ImagePicker.launchImageLibrary(
+      {mediaType: 'photo', selectionLimit: 4},
+      response => {
+        if (response.didCancel) console.log('cancel');
+        else if (response.errorMessage) console.log(response.errorMessage);
+        else if (response.assets && response.assets[0]) setImg(response.assets);
+      },
+    );
 
   return (
     <View
@@ -90,33 +92,37 @@ export default function Message(props: PropsStack<'Message'>) {
         alignItems: 'center',
       }}>
       <FlatList
+        inverted
         ref={flatListRef}
         data={messages}
         renderItem={({item}) => {
           return <CardMessage item={item} owner={id == item.emisor} />;
         }}
         style={{width: '90%'}}
-        onContentSizeChange={() => {
-          flatListRef.current?.scrollToEnd({animated: true});
-        }}
-        onLayout={() => {
-          flatListRef.current?.scrollToEnd({animated: true});
-        }}
+        contentContainerStyle={{flexGrow: 1}}
+        // onContentSizeChange={() => {
+        //   // flatListRef.current?.scrollToEnd({animated: true});
+        // }}
+        // onLayout={() => {
+        //   // flatListRef.current?.scrollToEnd({animated: true});
+        // }}
       />
-      {img?.uri && (
-        <View style={styles.imageViewer}>
-          <View style={styles.image}>
-            <Image style={{width: 50, height: 50}} source={{uri: img?.uri}} />
+      <View style={styles.ViewImgs}>
+        {img.map(img => (
+          <View key={img?.uri} style={styles.imageViewer}>
+            <View style={styles.image}>
+              <Image style={{width: 50, height: 50}} source={{uri: img?.uri}} />
+            </View>
+            <AntDesign
+              style={[styles.imgClose, {backgroundColor: secondary}]}
+              color={primary}
+              size={12}
+              name="close"
+              onPress={() => setImg([])}
+            />
           </View>
-          <AntDesign
-            style={[styles.imgClose, {backgroundColor: secondary}]}
-            color={primary}
-            size={12}
-            name="close"
-            onPress={() => setImg({})}
-          />
-        </View>
-      )}
+        ))}
+      </View>
       <TextInput
         containerProps={{style: styles.Input}}
         label="Message"
@@ -150,7 +156,6 @@ const styles = StyleSheet.create({
   },
   imageViewer: {
     alignSelf: 'flex-start',
-    left: 30,
   },
   image: {
     overflow: 'hidden',
@@ -163,5 +168,11 @@ const styles = StyleSheet.create({
     padding: 5,
     overflow: 'hidden',
     borderRadius: 10,
+  },
+  ViewImgs: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    flexWrap: 'wrap',
   },
 });

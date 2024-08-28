@@ -1,27 +1,28 @@
 import React from 'react';
-import {View, Text, Image} from 'react-native';
+import {View, Text} from 'react-native';
 import {useContext} from 'react';
 import {StyleSheet} from 'react-native';
 import {ColorsContex} from '../../context/colors.context';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import Icon from 'react-native-vector-icons/AntDesign';
+import Image from '../Image/image.component';
+import {IUser} from '../../utils/interfaces/user';
 
-interface item {
-  image?: string;
-  avatar?: string;
-  header: string;
-  description: string;
-  
-}
-
-export default function CardUser({item,onPress}: {item: item; horizontal?: boolean,onPress?: () => void;}) {
+export default function CardUser({
+  item,
+  onPress,
+}: {
+  item: IUser;
+  horizontal?: boolean;
+  onPress?: () => void;
+}) {
   const styles = Styles();
 
   return (
     <View style={styles.card}>
+      <Image style={styles.avatar} uri={item.avatar?.Media} />
       <View style={styles.cardBody}>
-        <Text style={styles.textHeader}>{item.header}</Text>
-        <Text style={styles.textDesc}>{item.description}</Text>
+        <Text style={styles.textHeader}>{item.name}</Text>
+        <Text style={styles.textDesc}>{item.email}</Text>
       </View>
       <AntDesign
         name="rightcircleo"
@@ -44,7 +45,7 @@ export const Styles = () => {
       borderRadius: 10,
       backgroundColor: primary,
       padding: 20,
-      justifyContent: 'space-between',
+      justifyContent: 'space-evenly',
       alignItems: 'center',
     },
     header: {
@@ -67,6 +68,10 @@ export const Styles = () => {
     },
     icon: {
       color: secondary,
+    },
+    avatar: {
+      borderRadius: 100,
+      padding: 25,
     },
   });
 };

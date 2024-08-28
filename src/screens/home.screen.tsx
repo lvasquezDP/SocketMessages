@@ -5,7 +5,6 @@ import {PropsStack} from '../routes/stack.routes';
 import {TextInput} from '../components/TextInput/TextInput';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {ColorsContex} from '../context/colors.context';
-import {useStoreUser} from '../context/user.zustand.context';
 import {SocketContex} from '../context/socket.context';
 import CardUser from '../components/CardUser/user.component';
 
@@ -13,23 +12,7 @@ export default function Home(props: PropsStack<'Home'>) {
   // WebSocket
   const {secondary} = useContext(ColorsContex);
   const [sql, setSql] = useState('');
-  const name = useStoreUser(state => state.name);
-  const email = useStoreUser(state => state.email);
   const {state} = useContext(SocketContex);
-  const data = [
-    {
-      image:
-        'https://res.cloudinary.com/dxarbtyux/image/upload/v1703315333/color-contrast-inspector/sample-5-bg.webp',
-      avatar:
-        'https://res.cloudinary.com/dxarbtyux/image/upload/v1703315333/color-contrast-inspector/sample-5-avatar.webp',
-      header: 'Tesla',
-      description: 'Electric vehicles, giant batteries & solar',
-      inform: [
-        {header: 'valuation', value: 70},
-        {header: 'Followers', value: 21.5},
-      ],
-    },
-  ];
   return (
     <View
       style={{
@@ -56,7 +39,7 @@ export default function Home(props: PropsStack<'Home'>) {
         renderItem={({item}) => {
           return (
             <CardUser
-              item={{header: item.email, description: 'Conected'}}
+              item={item}
               horizontal
               onPress={() => props.navigation.navigate('Message', {user: item})}
             />
