@@ -9,10 +9,12 @@ import User from '../screens/user';
 import {IUser} from '../utils/interfaces/user';
 import Image from '../components/Image/image.component';
 import {StyleSheet} from 'react-native';
+import mapaScreen from '../screens/mapa.screen';
 
 type RootStackParamList = {
   Start?: {};
   Home?: {};
+  Mapa?: {};
   Message: {user: IUser};
   User: {user?: IUser};
 };
@@ -32,7 +34,6 @@ export function StackNav() {
         headerTintColor: secondary,
         headerStyle: {backgroundColor},
         headerTitleAlign: 'center',
-        // headerShown: false,
         // transitionSpec:{close:{animation:'timing',config:{}},open:{animation:'spring',config:{}}}
       }}
       initialRouteName="Start">
@@ -73,6 +74,7 @@ export function StackNav() {
         component={Message}
       />
       <Stack.Screen name="User" component={User} />
+      <Stack.Screen name="Mapa" component={mapaScreen} />
     </Stack.Navigator>
   );
 }

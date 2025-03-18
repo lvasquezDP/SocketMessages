@@ -40,6 +40,7 @@ export default function Message(props: PropsStack<'Message'>) {
   };
 
   useSocketMessage('message-user', getMessages);
+  useSocketMessage('message-visto', getMessages);
 
   useEffect(() => {
     getMessages({});

@@ -35,18 +35,20 @@ function reducer(state: state, action: sw) {
     case 'users-conected':
       return {...state, users: action.payload.users};
     case 'message-user':
-      if(action.payload.message.img.length==1)
-      PushNotificationConfig.showNotification({
+      const notificacion={
         channelId: 'default-channel-id',
         title: action.payload.user.email,
         message: action.payload.message.message,
+      };
+      if(action.payload.message.img.length==1)
+      PushNotificationConfig.showNotification({
+        ...notificacion,
         picture:action.payload.message.img[0].Media,
       });
       else
       PushNotificationConfig.showNotification({
-        channelId: 'default-channel-id',
-        title: action.payload.user.email,
-        message: action.payload.message.message+'\n Con '+action.payload.message.img.length+' imagenes',
+        ...notificacion,
+        message: notificacion.message+(action.payload.message.img.length>0?'\n Con '+action.payload.message.img.length+' imagenes':''),
       });
       return {
         ...state,

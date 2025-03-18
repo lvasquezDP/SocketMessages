@@ -47,7 +47,7 @@ export default function CardMessage({
                 style={styles.icon}
                 onPress={onPress}
               />
-              {item.entregado && (
+              {item.visto && (
                 <AntDesign
                   name="check"
                   size={12}

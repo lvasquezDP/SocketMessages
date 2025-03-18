@@ -47,6 +47,7 @@ export const Styles = () => {
       padding: 20,
       justifyContent: 'space-evenly',
       alignItems: 'center',
+      marginBottom:5,
     },
     header: {
       height: 100,
