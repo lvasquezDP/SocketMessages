@@ -5,7 +5,7 @@ import {PropsStack} from '../routes/stack.routes';
 import {TextInput} from '../components/TextInput/TextInput';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {ColorsContex} from '../context/colors.context';
-import {useSocketMessage} from '../context/socket.context';
+import {SocketContex, useSocketMessage} from '../context/socket.context';
 import CardMessage, {
   MessageInterface,
 } from '../components/CardMessage/message.component';
@@ -13,14 +13,59 @@ import api from '../utils/api/api';
 import {useStoreUser} from '../context/user.zustand.context';
 import ImagePicker from '../utils/imagePicker';
 import {Asset} from 'react-native-image-picker';
+import {useVideoCall} from '../hooks/useVideoCall';
+import {RTCView} from 'react-native-webrtc';
 
 export default function Message(props: PropsStack<'Message'>) {
   const {secondary, primary} = useContext(ColorsContex);
+  const {socket} = useContext(SocketContex);
   const [message, setMessage] = useState('');
   const [img, setImg] = useState<Asset>();
   const [messages, setMessages] = useState<MessageInterface[]>([]);
   const id = useStoreUser(state => state.id);
   const flatListRef = useRef<FlatList>(null);
+
+  const {
+    startCall,
+    receiveOffer,
+    receiveAnswer,
+    addIceCandidate,
+    localStream,
+    remoteStream,
+  } = useVideoCall({
+    localId: id,
+    remoteId: props.route.params.user.id,
+    socket,
+  });
+
+  // Manejar mensajes de signaling
+  useEffect(() => {
+    const handler = (data: any) => {
+      const {type, payload, from} = data;
+
+      switch (type) {
+        case 'call-offer':
+          receiveOffer(payload);
+          break;
+        case 'call-answer':
+          receiveAnswer(payload);
+          break;
+        case 'ice-candidate':
+          addIceCandidate(payload);
+          break;
+      }
+    };
+
+    socket &&
+      socket.addEventListener('message', e => {
+        const data = JSON.parse(e.data);
+        handler(data);
+      });
+
+    return () => {
+      socket && socket.removeEventListener('message', handler);
+    };
+  }, []);
 
   const getMessages = (payload: {[key: string]: any}) => {
     api
@@ -42,7 +87,17 @@ export default function Message(props: PropsStack<'Message'>) {
   useSocketMessage('message-user', getMessages);
 
   useEffect(() => {
-    props.navigation.setOptions({title: props.route.params.user.email});
+    props.navigation.setOptions({
+      title: props.route.params.user.email,
+      headerRight: () => (
+        <AntDesign
+          name="ellipsis1"
+          color={secondary}
+          size={25}
+          onPress={() => startCall()}
+        />
+      ),
+    });
     getMessages({});
   }, []);
 
@@ -52,12 +107,12 @@ export default function Message(props: PropsStack<'Message'>) {
     data.append('receptor', props.route.params.user.id);
     data.append('emisor', id);
     console.log(img);
-    
-    data.append('file', {
-      name: img?.fileName,
-      uri: img?.uri,
-      type: img?.type,
-    });
+    if (img)
+      data.append('file', {
+        name: img?.fileName,
+        uri: img?.uri,
+        type: img?.type,
+      });
     api
       .post('/user/', data, {
         headers: {
@@ -71,7 +126,7 @@ export default function Message(props: PropsStack<'Message'>) {
         setImg({});
       })
       .catch(e => {
-        console.log(e);
+        console.log({...e});
       });
   };
 
@@ -89,6 +144,25 @@ export default function Message(props: PropsStack<'Message'>) {
         flex: 1,
         alignItems: 'center',
       }}>
+      {localStream && (
+        <RTCView
+          streamURL={localStream.toURL()}
+          style={{
+            width: 100,
+            height: 150,
+            position: 'absolute',
+            top: 10,
+            right: 10,
+          }}
+        />
+      )}
+
+      {remoteStream && (
+        <RTCView
+          streamURL={remoteStream.toURL()}
+          style={{width: '100%', height: '50%'}}
+        />
+      )}
       <FlatList
         ref={flatListRef}
         data={messages}

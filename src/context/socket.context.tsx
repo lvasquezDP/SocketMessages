@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useReducer,
   useRef,
+  useState,
 } from 'react';
 import {host} from '../utils/api/api';
 import PushNotificationConfig from '../utils/alerts/PushNotificationConfig';
@@ -15,11 +16,13 @@ const InitContex: Contex = {
   connectToWebSockets: id => {},
   subscribe: (type, callback) => () => {},
   state: {users: []},
+  socket: undefined,
 };
 interface Contex {
   connectToWebSockets: (id: string) => void;
   subscribe: (type: string, callback: callback) => Function;
   state: state;
+  socket: WebSocket | undefined;
 }
 interface sw {
   type: string;
@@ -39,7 +42,7 @@ function reducer(state: state, action: sw) {
         channelId: 'default-channel-id',
         message: action.payload.message.message,
         title: action.payload.user.email,
-        picture:action.payload.message.img,
+        picture: action.payload.message.img,
       });
       return {
         ...state,
@@ -54,11 +57,12 @@ export const SocketContex = createContext(InitContex);
 
 export const SocketContext: FC<{children: React.ReactNode}> = ({children}) => {
   const [state, dispatch] = useReducer(reducer, {users: []});
+  const [socket, setSocket] = useState<WebSocket>();
   const subscriptions = useRef<{[key: string]: callback[]}>({}).current;
 
   const connectToWebSockets = (id: string) => {
     const socket = new WebSocket(`ws://${host}/ws?id=${id}`);
-
+    setSocket(socket);
     socket.onmessage = event => {
       const {type, payload}: sw = JSON.parse(event.data);
       let res = true;
@@ -81,6 +85,7 @@ export const SocketContext: FC<{children: React.ReactNode}> = ({children}) => {
     socket.onopen = () => {
       console.log('Connected');
     };
+    return socket;
   };
 
   const subscribe = (type: string, callback: callback) => {
@@ -92,9 +97,9 @@ export const SocketContext: FC<{children: React.ReactNode}> = ({children}) => {
       subscriptions[type] = subscriptions[type].filter(cb => cb !== callback);
     };
   };
-
   return (
-    <SocketContex.Provider value={{connectToWebSockets, subscribe, state}}>
+    <SocketContex.Provider
+      value={{connectToWebSockets, subscribe, state, socket}}>
       {children}
     </SocketContex.Provider>
   );
